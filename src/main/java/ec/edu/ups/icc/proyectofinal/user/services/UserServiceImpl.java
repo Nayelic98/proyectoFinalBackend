@@ -211,14 +211,31 @@ public UserResponseDto update(Long id, UpdateUserDto dto) {
     return UserMapper.toResponse(User.fromEntity(saved));
 }
     @Override
-    @Transactional
-    public void delete(Long id) {
-        if (!userRepo.existsById(id)) {
-            throw new NotFoundException("Usuario no encontrado");
-        }
-        userRepo.deleteById(id);
-    }
+@Transactional
+public void delete(Long id) {
+    // 1. Buscamos al usuario
+    UserEntity user = userRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+    // 2. LIMPIEZA MANUAL DE SOLICITUDES
+    // Como no tienes un repositorio de solicitudes inyectado aquí directamente, 
+    // lo más rápido es usar una consulta personalizada en el UserRepository o
+    // borrar la solicitud asociada si tienes acceso al repositorio.
+    
+    // Si la solicitud está ligada al email (contacto):
+    solicitudRepo.deleteByContacto(user.getContacto());
+
+    // 3. LIMPIEZA DE ROLES (ManyToMany)
+    // Esto limpia la tabla 'user_roles' para este ID
+    user.getRoles().clear();
+    
+    // 4. LIMPIEZA DE REDES (@ElementCollection)
+    user.getRedes().clear();
+
+    // 5. BORRADO FINAL
+    // Gracias al CascadeType.ALL en tu Entity, esto borrará los 'projects'
+    userRepo.delete(user);
+}
     @Override
     public UserResponseDto findByContacto(String contacto) {
         UserEntity entity = userRepo.findByContacto(contacto)
