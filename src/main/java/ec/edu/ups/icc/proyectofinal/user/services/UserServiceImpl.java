@@ -223,7 +223,7 @@ public void delete(Long id) {
     // borrar la solicitud asociada si tienes acceso al repositorio.
     
     // Si la solicitud está ligada al email (contacto):
-    solicitudRepo.deleteByContacto(user.getContacto());
+    solicitudRepo.eliminarPorContacto(user.getContacto());
 
     // 3. LIMPIEZA DE ROLES (ManyToMany)
     // Esto limpia la tabla 'user_roles' para este ID
