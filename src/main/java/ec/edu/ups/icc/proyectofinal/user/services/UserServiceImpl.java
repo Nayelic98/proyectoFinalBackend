@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ec.edu.ups.icc.proyectofinal.advice.repository.AdviceRepository;
 import ec.edu.ups.icc.proyectofinal.exceptions.domain.NotFoundException;
 import ec.edu.ups.icc.proyectofinal.project.security.models.RoleEntity;
 import ec.edu.ups.icc.proyectofinal.project.security.models.RoleName;
@@ -29,11 +30,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepo;
     private final RoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
-    public UserServiceImpl(UserRepository userRepo, RoleRepository roleRepo, PasswordEncoder passwordEncoder, SolicitudPostulacionRepository solicitudRepo) {
+    private final AdviceRepository adviceRepo; // Asegúrate de crearlo e inyectarlo
+    public UserServiceImpl(UserRepository userRepo, RoleRepository roleRepo, PasswordEncoder passwordEncoder, SolicitudPostulacionRepository solicitudRepo, AdviceRepository adviceRepo) {
         this.userRepo = userRepo;
         this.solicitudRepo = solicitudRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
+        this.adviceRepo = adviceRepo;
     }
 @Override
 @Transactional
@@ -210,37 +213,36 @@ public UserResponseDto update(Long id, UpdateUserDto dto) {
     // 4. Retornamos el DTO de respuesta
     return UserMapper.toResponse(User.fromEntity(saved));
 }
-    @Override
+   @Override
 @Transactional
 public void delete(Long id) {
-    // 1. Buscamos al usuario o lanzamos error si no existe
+    // 1. Buscamos al usuario
     UserEntity user = userRepo.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
-    // 2. LIMPIEZA MANUAL DE SOLICITUDES
-    // Usamos el contacto (email) del usuario para borrar su solicitud previa
-    // Es vital pasar user.getContacto() como argumento
+    // 2. LIMPIEZA DE TABLAS EXTERNAS (Primero las que causan el error 500)
+    // Borramos asesorías/consejos donde participe el usuario
+    adviceRepo.deleteAllByUserId(id); 
+
+    // Borramos solicitudes de postulación usando el email
     if (user.getContacto() != null) {
         solicitudRepo.eliminarPorEmail(user.getContacto());
     }
 
-    // 3. LIMPIEZA DE ROLES (ManyToMany)
-    // Borra la relación en la tabla intermedia 'user_roles'
+    // 3. LIMPIEZA DE COLECCIONES INTERNAS
     if (user.getRoles() != null) {
         user.getRoles().clear();
     }
     
-    // 4. LIMPIEZA DE REDES (@ElementCollection)
-    // Borra las filas en la tabla 'user_redes'
     if (user.getRedes() != null) {
         user.getRedes().clear();
     }
 
-    // 5. BORRADO FINAL
-    // JPA se encargará de borrar los proyectos por el CascadeType.ALL que configuramos
+    // 4. BORRADO FINAL
+    // El CascadeType.ALL en la entidad User borrará automáticamente los Proyectos
     userRepo.delete(user);
     
-    System.out.println(">>> Usuario y dependencias eliminados: " + user.getContacto());
+    System.out.println(">>> Usuario y todas sus dependencias eliminados: " + user.getContacto());
 }
     @Override
     public UserResponseDto findByContacto(String contacto) {
