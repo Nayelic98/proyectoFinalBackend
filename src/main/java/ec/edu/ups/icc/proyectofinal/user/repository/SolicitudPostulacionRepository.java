@@ -15,10 +15,10 @@ import jakarta.transaction.Transactional;
 public interface SolicitudPostulacionRepository extends JpaRepository<SolicitudPostulacionEntity, Long> {
     Optional<SolicitudPostulacionEntity> findByEmail(String email);
         boolean existsByEmail(String email);
-        @Modifying // Necesario para DELETE o UPDATE
+   @Modifying
     @Transactional
-    @Query("DELETE FROM SolicitudPostulacionEntity s WHERE s.contacto = :contacto") 
-    void eliminarPorContacto(@Param("contacto") String contacto);
+    @Query("DELETE FROM SolicitudPostulacionEntity s WHERE s.email = :email")
+    void eliminarPorEmail(@Param("email") String email);
 
 
 }

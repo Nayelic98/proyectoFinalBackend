@@ -213,28 +213,34 @@ public UserResponseDto update(Long id, UpdateUserDto dto) {
     @Override
 @Transactional
 public void delete(Long id) {
-    // 1. Buscamos al usuario
+    // 1. Buscamos al usuario o lanzamos error si no existe
     UserEntity user = userRepo.findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
     // 2. LIMPIEZA MANUAL DE SOLICITUDES
-    // Como no tienes un repositorio de solicitudes inyectado aquí directamente, 
-    // lo más rápido es usar una consulta personalizada en el UserRepository o
-    // borrar la solicitud asociada si tienes acceso al repositorio.
-    
-    // Si la solicitud está ligada al email (contacto):
-    solicitudRepo.eliminarPorContacto(user.getContacto());
+    // Usamos el contacto (email) del usuario para borrar su solicitud previa
+    // Es vital pasar user.getContacto() como argumento
+    if (user.getContacto() != null) {
+        solicitudRepo.eliminarPorEmail(user.getContacto());
+    }
 
     // 3. LIMPIEZA DE ROLES (ManyToMany)
-    // Esto limpia la tabla 'user_roles' para este ID
-    user.getRoles().clear();
+    // Borra la relación en la tabla intermedia 'user_roles'
+    if (user.getRoles() != null) {
+        user.getRoles().clear();
+    }
     
     // 4. LIMPIEZA DE REDES (@ElementCollection)
-    user.getRedes().clear();
+    // Borra las filas en la tabla 'user_redes'
+    if (user.getRedes() != null) {
+        user.getRedes().clear();
+    }
 
     // 5. BORRADO FINAL
-    // Gracias al CascadeType.ALL en tu Entity, esto borrará los 'projects'
+    // JPA se encargará de borrar los proyectos por el CascadeType.ALL que configuramos
     userRepo.delete(user);
+    
+    System.out.println(">>> Usuario y dependencias eliminados: " + user.getContacto());
 }
     @Override
     public UserResponseDto findByContacto(String contacto) {
