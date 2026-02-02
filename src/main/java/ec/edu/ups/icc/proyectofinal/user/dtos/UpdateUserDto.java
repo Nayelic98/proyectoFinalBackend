@@ -18,9 +18,11 @@ public class UpdateUserDto {
 
     public String especialidad;
     
-    public String foto;
+    public String foto; // Aquí recibiremos el Base64 desde Angular
     
-    public String redes;
+    // Cambiamos String a List<String> para recibir múltiples enlaces
+    public java.util.List<String> redes; 
 
     public UpdateUserDto() {}
+
 }

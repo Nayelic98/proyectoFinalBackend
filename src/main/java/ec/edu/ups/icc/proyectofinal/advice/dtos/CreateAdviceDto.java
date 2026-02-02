@@ -1,26 +1,75 @@
 package ec.edu.ups.icc.proyectofinal.advice.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 public class CreateAdviceDto {
 
-    @NotBlank(message = "El nombre del solicitante es obligatorio")
+    @JsonProperty("nombreUsuario")
     public String nombreUsuario;
 
-    @NotBlank(message = "El teléfono de contacto es obligatorio")
+    @JsonProperty("telefono")
     public String telefono;
 
-    @NotBlank(message = "El mensaje de la consulta no puede estar vacío")
-    @Size(min = 10, max = 1000, message = "El mensaje debe tener entre 10 y 1000 caracteres")
+    @JsonProperty("mensaje")
     public String mensaje;
 
-    @NotNull(message = "El ID del usuario solicitante es obligatorio")
+    @JsonProperty("usuarioId")
     public Long usuarioId;
 
-    @NotNull(message = "El ID del programador a consultar es obligatorio")
+    @JsonProperty("programadorId")
     public Long programadorId;
 
-    public CreateAdviceDto() {}
+    @JsonProperty("fecha")
+    public String fecha;
+
+    public String getNombreUsuario() {
+        return nombreUsuario;
+    }
+
+    public void setNombreUsuario(String nombreUsuario) {
+        this.nombreUsuario = nombreUsuario;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getMensaje() {
+        return mensaje;
+    }
+
+    public void setMensaje(String mensaje) {
+        this.mensaje = mensaje;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+
+    public Long getProgramadorId() {
+        return programadorId;
+    }
+
+    public void setProgramadorId(Long programadorId) {
+        this.programadorId = programadorId;
+    }
+
+    public String getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(String fecha) {
+        this.fecha = fecha;
+    }
+    
+    
 }

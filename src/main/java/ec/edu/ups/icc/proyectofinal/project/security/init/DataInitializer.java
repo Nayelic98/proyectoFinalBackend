@@ -1,4 +1,6 @@
 package ec.edu.ups.icc.proyectofinal.project.security.init;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -56,7 +58,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setPassword(passwordEncoder.encode("admin123")); // Contraseña segura
             admin.setDescripcion("Cuenta de administración inicial");
             admin.setFoto("default-admin.png");
-            admin.setRedes("N/A");
+            admin.setRedes(List.of("https://www.linkedin.com/in/admin", "https://www.twitter.com/admin"));
             admin.setMustChangePassword(true);
             admin.setCreatedBy("SYSTEM");
 

@@ -1,6 +1,7 @@
 package ec.edu.ups.icc.proyectofinal.user.models;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import ec.edu.ups.icc.proyectofinal.user.dtos.UpdateUserDto;
 
@@ -12,23 +13,22 @@ public class User {
     private String descripcion;
     private String especialidad;
     private String foto;
-    private String redes;
+    private List<String> redes;
     private String role;
     private boolean mustChangePassword;
     private LocalDateTime createdAt;
 
     public User(Long id, String nombre, String contacto, String descripcion, String especialidad, 
-                String foto, String redes, String role, boolean mustChangePassword) {
+                String foto, List<String> redes, String role, boolean mustChangePassword) {
         this.id = id;
         this.nombre = nombre;
         this.contacto = contacto;
         this.descripcion = descripcion;
         this.especialidad = especialidad;
         this.foto = foto;
-        this.redes = redes;
+        this.redes = redes; // Ahora coinciden los tipos
         this.role = role;
         this.mustChangePassword = mustChangePassword;
-        this.createdAt = LocalDateTime.now();
     }
 
     public User() {}
@@ -77,12 +77,12 @@ public class User {
     // ==================== UPDATES ====================
 
     public User update(UpdateUserDto dto) {
-        this.nombre = dto.nombre;
-        this.contacto = dto.contacto;
-        this.descripcion = dto.descripcion;
-        this.especialidad = dto.especialidad;
-        this.foto = dto.foto;
-        this.redes = dto.redes;
+        if (dto.nombre != null) this.nombre = dto.nombre;
+        if (dto.contacto != null) this.contacto = dto.contacto;
+        if (dto.descripcion != null) this.descripcion = dto.descripcion;
+        if (dto.especialidad != null) this.especialidad = dto.especialidad;
+        if (dto.foto != null) this.foto = dto.foto;
+        if (dto.redes != null) this.redes = dto.redes;
         return this;
     }
 
@@ -108,9 +108,7 @@ public class User {
     public String getFoto() { return foto; }
     public void setFoto(String foto) { this.foto = foto; }
 
-    public String getRedes() { return redes; }
-    public void setRedes(String redes) { this.redes = redes; }
-
+    
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
@@ -119,4 +117,12 @@ public class User {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public List<String> getRedes() {
+        return redes;
+    }
+
+    public void setRedes(List<String> redes) {
+        this.redes = redes;
+    }
 }

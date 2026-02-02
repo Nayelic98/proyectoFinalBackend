@@ -20,6 +20,8 @@ public class UserDetailsImpl implements UserDetails {
     private Long id;
     private String nombre;
     private String contacto;
+    private Boolean mustChangePassword;
+    
     
     @JsonIgnore
     private String password;
@@ -27,12 +29,14 @@ public class UserDetailsImpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(Long id, String nombre, String contacto, String password, 
-                          Collection<? extends GrantedAuthority> authorities) {
+                          Collection<? extends GrantedAuthority> authorities,Boolean mustChangePassword) {
         this.id = id;
         this.nombre = nombre;
         this.contacto = contacto;
         this.password = password; // Ahora sí se asigna correctamente
         this.authorities = authorities;
+        this.mustChangePassword = mustChangePassword;
+        
     }
 
     public static UserDetailsImpl build(UserEntity user) {
@@ -42,11 +46,13 @@ public class UserDetailsImpl implements UserDetails {
                 .collect(Collectors.toList());
 
         return new UserDetailsImpl(
-                user.getId(),
-                user.getNombre(),
-                user.getContacto(),
-                user.getPassword(), // ¡No olvides pasar el password!
-                authorities);
+            user.getId(),
+            user.getNombre(),
+            user.getContacto(),
+            user.getPassword(), 
+            authorities,         // 5to parámetro
+            user.isMustChangePassword() // 6to parámetro
+    );
     }
    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -81,5 +87,43 @@ public class UserDetailsImpl implements UserDetails {
         if (o == null || getClass() != o.getClass()) return false;
         UserDetailsImpl user = (UserDetailsImpl) o;
         return Objects.equals(id, user.id);
+    }
+
+    public static long getSerialversionuid() {
+        return serialVersionUID;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getContacto() {
+        return contacto;
+    }
+
+    public void setContacto(String contacto) {
+        this.contacto = contacto;
+    }
+
+    
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
+
+    public Boolean getMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(Boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 }

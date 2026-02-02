@@ -16,14 +16,15 @@ public class AdviceEntity extends BaseModel {
 
     @Column( nullable = false)
     private String mensaje; 
-
+@Column(nullable = false)
+    private String fecha;
     @Column(nullable = false)
     private String mensajeRespuesta; // Justificación del programador
 
     @Column(nullable = false)
     private String estado; // "pendiente", "aceptada", "negada"
 
-    private String fecha; // Fecha programada (ISO String)
+   
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -89,13 +90,7 @@ public class AdviceEntity extends BaseModel {
         this.estado = estado;
     }
 
-    public String getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(String fecha) {
-        this.fecha = fecha;
-    }
+   
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -128,5 +123,14 @@ public class AdviceEntity extends BaseModel {
     public void setProgramador(UserEntity programador) {
         this.programador = programador;
     }
+
+    public String getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(String fecha) {
+        this.fecha = fecha;
+    }
+
 
 }

@@ -2,9 +2,10 @@ spring:
   application:
     name: fundamentos01
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    # La sintaxis ${VARIABLE:valor} le dice: "Usa la variable, y si no existe, usa esto"
+    url: jdbc:postgresql://${DB_HOST:ep-rough-art-aivb6r9h-pooler.c-4.us-east-1.aws.neon.tech}:${DB_PORT:5432}/${DB_NAME:neondb}?sslmode=require
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD:npg_dZk5ySXj7IHl}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

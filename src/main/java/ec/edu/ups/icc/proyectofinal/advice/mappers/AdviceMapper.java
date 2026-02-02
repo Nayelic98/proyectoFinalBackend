@@ -4,6 +4,8 @@ import ec.edu.ups.icc.proyectofinal.advice.dtos.AdviceResponseDto;
 import ec.edu.ups.icc.proyectofinal.advice.dtos.CreateAdviceDto;
 import ec.edu.ups.icc.proyectofinal.advice.dtos.UpdateAdviceDto;
 import ec.edu.ups.icc.proyectofinal.advice.models.Advice;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class AdviceMapper {
 
@@ -36,8 +38,6 @@ public class AdviceMapper {
     public static AdviceResponseDto toResponse(Advice advice) {
         AdviceResponseDto dto = new AdviceResponseDto();
         dto.id = advice.getId();
-        dto.nombreUsuario = advice.getNombreUsuario();
-        dto.telefono = advice.getTelefono();
         dto.mensaje = advice.getMensaje();
         dto.estado = advice.getEstado();
         dto.mensajeRespuesta = advice.getMensajeRespuesta();

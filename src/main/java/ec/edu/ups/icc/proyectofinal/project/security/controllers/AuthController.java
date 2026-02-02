@@ -11,6 +11,7 @@ import ec.edu.ups.icc.proyectofinal.project.security.dtos.AuthResponseDto;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.GoogleLoginRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.LoginRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.RegisterRequestDto;
+import ec.edu.ups.icc.proyectofinal.project.security.dtos.UpdatePasswordRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.services.AuthService;
 
 
@@ -45,5 +46,11 @@ public class AuthController {
         AuthResponseDto response = authService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
+    @PutMapping("/update-password")
+public ResponseEntity<?> updatePassword(@RequestBody UpdatePasswordRequestDto request) {
+    System.out.println("JSON recibido - Contacto: " + request.getContacto());
+    System.out.println("JSON recibido - Password: " + request.getNewPassword());
+    authService.updatePassword(request.getContacto(), request.getNewPassword());
+    return ResponseEntity.ok("OK");
+}
 }

@@ -29,8 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProperties jwtProperties;
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil,
-            UserDetailsServiceImpl userDetailsService,
-            JwtProperties jwtProperties) {
+                                 UserDetailsServiceImpl userDetailsService,
+                                 JwtProperties jwtProperties) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
         this.jwtProperties = jwtProperties;
@@ -38,45 +38,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && jwtUtil.validateToken(jwt)) {
-
                 String email = jwtUtil.getEmailFromToken(jwt);
+                
+                // Log para debuguear en la consola de Java
+                logger.info("JWT detectado. Email extraído: {}", email);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                if (email != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                logger.debug("Usuario autenticado: {}", email);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    logger.info("Usuario autenticado exitosamente: {}", email);
+                }
             }
-
         } catch (Exception ex) {
-
             logger.error("No se pudo establecer la autenticación del usuario", ex);
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String getJwtFromRequest(HttpServletRequest request) {
+    // Cambia temporalmente esto en JwtAuthenticationFilter.java para probar:
+private String getJwtFromRequest(HttpServletRequest request) {
+    // En lugar de usar jwtProperties, escribimos los strings directamente
+    String bearerToken = request.getHeader("Authorization"); 
 
-        String bearerToken = request.getHeader(jwtProperties.getHeader());
-
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(jwtProperties.getPrefix())) {
-            return bearerToken.substring(jwtProperties.getPrefix().length());
-        }
-
-        return null;
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        return bearerToken.substring(7).trim();
     }
+    return null;
+}
 }

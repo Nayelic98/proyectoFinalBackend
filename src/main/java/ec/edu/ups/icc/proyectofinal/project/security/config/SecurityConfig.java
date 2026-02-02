@@ -61,34 +61,50 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            // 1. AÑADIR ESTO PARA ACTIVAR LOS CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
-            .csrf(AbstractHttpConfigurer::disable)
-            .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint(unauthorizedHandler))
-            .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/auth/**").permitAll()
-                    .requestMatchers("/status/**").permitAll()
-                    .requestMatchers("/actuator/**").permitAll()
-                    .anyRequest().authenticated());
+   @Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
+        .csrf(AbstractHttpConfigurer::disable)
+        .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(unauthorizedHandler))
+        .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+    .requestMatchers("/auth/**").permitAll()
+    .requestMatchers("/status/**").permitAll()
+    .requestMatchers("/actuator/**").permitAll()
+    .requestMatchers("/api/users/mi-solicitud").authenticated() 
+// O si usas roles:
+.requestMatchers("/api/users/mi-solicitud").hasAnyRole("USER", "ADMIN")
+    
+    // 1. Usuarios/Me y Programadores
+    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/create-programmer").hasRole("ADMIN")
+.requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/programadores").permitAll()
+    .requestMatchers("/api/users/me").authenticated()
 
-        http.authenticationProvider(authenticationProvider());
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    // 2. PROYECTOS: Reglas específicas por método
+    // El GET es público
+    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/proyectos/**").permitAll() 
+    
+    // El resto de métodos (POST, PUT, DELETE) requieren rol
+    .requestMatchers("/api/proyectos/**").hasAnyRole("ADMIN", "PROGRAMMER")
+    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/postular").authenticated()
+            // Dentro de .authorizeHttpRequests:
+.requestMatchers("/api/users/solicitudes-postulacion/**").hasRole("ADMIN")
+    .anyRequest().authenticated()
+);
+    http.authenticationProvider(authenticationProvider());
+    http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
-
+    return http.build();
+}
     // 2. AÑADIR ESTE BEAN PARA CONFIGURAR LOS PERMISOS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Permite el origen de tu frontend (ajusta si usas otro puerto)
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "https://tu-dominio-frontend.vercel.app")); 
+        configuration.setAllowedOrigins(List.of("http://localhost:4200", "https://front-end-integrador.onrender.com")); 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setAllowCredentials(true);

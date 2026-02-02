@@ -84,24 +84,47 @@ public ProjectResponseDto create(CreateProjectDto dto) {
     }
 
     @Override
-    @Transactional
-    public ProjectResponseDto update(Long id, UpdateProjectDto dto, UserDetailsImpl currentUser) {
-        ProjectEntity existingEntity = projectRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Proyecto no encontrado"));
+@Transactional
+public ProjectResponseDto update(Long id, UpdateProjectDto dto, UserDetailsImpl currentUser) {
+    // 1. Buscamos la entidad real gestionada por JPA
+    ProjectEntity existingEntity = projectRepo.findById(id)
+            .orElseThrow(() -> new NotFoundException("Proyecto no encontrado"));
 
-        // Validar que el usuario sea dueño del proyecto o sea ADMIN
-        validateOwnership(existingEntity, currentUser);
+    // 2. Validar que el usuario sea dueño del proyecto o sea ADMIN
+    validateOwnership(existingEntity, currentUser);
 
-        // Actualizar datos usando el modelo de dominio
-        Project project = Project.fromEntity(existingEntity);
-        project.update(dto);
-
-        ProjectEntity updatedEntity = project.toEntity();
-        updatedEntity.setId(id);
-        updatedEntity.setAssignedTo(existingEntity.getAssignedTo()); // Mantener el programador original
-
-        return toResponseDto(projectRepo.save(updatedEntity));
+    // 3. ACTUALIZACIÓN DIRECTA (Evita crear nuevas entidades con toEntity())
+    // Solo actualizamos si el campo en el DTO no es nulo
+    if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
+        existingEntity.setNombre(dto.getNombre());
     }
+    if (dto.getDescripcion() != null) {
+        existingEntity.setDescripcion(dto.getDescripcion());
+    }
+    if (dto.getCategoria() != null) {
+        existingEntity.setCategoria(dto.getCategoria());
+    }
+    if (dto.getTipo() != null) {
+        existingEntity.setTipo(dto.getTipo());
+    }
+    if (dto.getRepo() != null) {
+        existingEntity.setRepo(dto.getRepo());
+    }
+    if (dto.getDeploy() != null) {
+        existingEntity.setDeploy(dto.getDeploy());
+    }
+
+    // 4. Manejo de Tecnologías (Si tu entidad las tiene como @ElementCollection o @ManyToMany)
+    if (dto.getTecnologias() != null) {
+        existingEntity.getTecnologias().clear();
+        existingEntity.getTecnologias().addAll(dto.getTecnologias());
+    }
+
+    // 5. Guardar la entidad original que ya está "enganchada" a la DB
+    ProjectEntity saved = projectRepo.save(existingEntity);
+    
+    return toResponseDto(saved);
+}
 
     @Override
     @Transactional

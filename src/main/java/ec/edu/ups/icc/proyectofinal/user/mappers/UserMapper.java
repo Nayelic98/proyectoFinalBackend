@@ -6,12 +6,11 @@ import ec.edu.ups.icc.proyectofinal.user.dtos.UserResponseDto;
 import ec.edu.ups.icc.proyectofinal.user.models.User;
 
 public class UserMapper {
-// Simulación de modelo base para búsquedas o transformaciones simples
+
     public static User toModel(Long id, String nombre, String contacto, String role) {
         return new User(id, nombre, contacto, null, null, null, null, role, false);
     }
 
-    // DTO de Creación -> Model (id se pone en 0 o null porque Postgres lo genera)
     public static User fromCreateDto(CreateUserDto dto) {
         return new User(
             null, 
@@ -26,7 +25,6 @@ public class UserMapper {
         );
     }   
 
-    // DTO de Actualización -> Model
     public static User fromUpdateDto(UpdateUserDto dto) {
         return new User(
             null, 
@@ -36,21 +34,22 @@ public class UserMapper {
             dto.especialidad, 
             dto.foto, 
             dto.redes, 
-            null, // El rol usualmente no se cambia en un Update común
+            null, // No permitimos cambiar rol desde un update común
             false
         );
-    }   
+    } 
 
     public static UserResponseDto toResponse(User user) {
-    UserResponseDto dto = new UserResponseDto();
-    dto.id = user.getId();
-    dto.nombre = user.getNombre();
-    dto.contacto = user.getContacto();
-    
-    // Si user.getRole() devuelve un String, esto está bien.
-    // Si no, asegúrate de extraer el nombre del rol principal.
-    dto.role = (user.getRole() != null) ? user.getRole() : "ROLE_USER"; 
-    
-    return dto;
-}
+        UserResponseDto dto = new UserResponseDto();
+        dto.id = user.getId();
+        dto.nombre = user.getNombre();
+        dto.contacto = user.getContacto();
+        
+        dto.especialidad = user.getEspecialidad();
+        dto.descripcion = user.getDescripcion();
+        dto.foto = user.getFoto();
+dto.redes = user.getRedes();        dto.mustChangePassword = user.isMustChangePassword();
+dto.role = (user.getRole() != null) ? user.getRole() : "ROLE_USER";        
+        return dto;
+    }
 }

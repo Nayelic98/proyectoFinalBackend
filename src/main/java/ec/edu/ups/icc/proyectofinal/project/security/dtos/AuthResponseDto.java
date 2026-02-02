@@ -9,17 +9,18 @@ public class AuthResponseDto {
     private String name;
     private String email;
     private Set<String> roles;
-
+    private boolean mustChangePassword;
     // Constructores
     public AuthResponseDto() {
     }
 
-    public AuthResponseDto(String token, Long userId, String name, String email, Set<String> roles) {
+    public AuthResponseDto(String token, Long userId, String name, String email, Set<String> roles,boolean mustChangePassword) {
         this.token = token;
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.roles = roles;
+        this.mustChangePassword = mustChangePassword;
     }
 
     public String getToken() {
@@ -68,6 +69,14 @@ public class AuthResponseDto {
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 
 }

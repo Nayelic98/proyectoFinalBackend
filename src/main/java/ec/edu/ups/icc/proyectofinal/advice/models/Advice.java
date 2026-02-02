@@ -1,6 +1,7 @@
 package ec.edu.ups.icc.proyectofinal.advice.models;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import ec.edu.ups.icc.proyectofinal.advice.dtos.UpdateAdviceDto;
 
@@ -36,7 +37,7 @@ public class Advice {
         advice.setMensaje(entity.getMensaje());
         advice.setMensajeRespuesta(entity.getMensajeRespuesta());
         advice.setEstado(entity.getEstado());
-        advice.setFecha(entity.getFecha());
+        advice.setFecha(entity.getFecha().toString()); // Convertir LocalDateTime a String
         advice.setCreatedAt(entity.getCreatedAt());
         advice.setUpdatedAt(entity.getUpdatedAt());
 
@@ -49,7 +50,6 @@ public class Advice {
 
         return advice;
     }
-
     /**
      * Convierte este modelo a una Entidad para guardar en la BD
      */
@@ -63,11 +63,13 @@ public class Advice {
         entity.setMensaje(this.mensaje);
         entity.setMensajeRespuesta(this.mensajeRespuesta);
         entity.setEstado(this.estado);
-        entity.setFecha(this.fecha);
+        if (this.fecha != null) {
+            entity.setFecha(fecha);
+        }
         // El createdAt se maneja en el constructor de la entidad
         return entity;
     }
-
+    
     // ==================== UPDATES ====================
 
     /**

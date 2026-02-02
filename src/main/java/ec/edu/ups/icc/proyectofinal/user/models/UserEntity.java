@@ -34,8 +34,10 @@ public class UserEntity extends BaseModel {
     @Column(nullable = false)
     private String foto;
 
-    @Column(nullable = false)
-    private String redes;
+   @ElementCollection
+@CollectionTable(name = "user_redes", joinColumns = @JoinColumn(name = "user_id"))
+@Column(name = "url")
+private List<String> redes = new ArrayList<>(); // Inicializar siempre para evitar NullPointerException
 
     
 
@@ -119,24 +121,13 @@ public class UserEntity extends BaseModel {
         this.foto = foto;
     }
 
-    public String getRedes() {
-        return redes;
-    }
-
-    public void setRedes(String redes) {
-        this.redes = redes;
-    }
-
+    
    
 
-    public boolean isMustChangePassword() {
-        return mustChangePassword;
-    }
 
-    public void setMustChangePassword(boolean mustChangePassword) {
-        this.mustChangePassword = mustChangePassword;
-    }
 
+
+   
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -160,5 +151,23 @@ public class UserEntity extends BaseModel {
     public void setProjects(List<ProjectEntity> projects) {
         this.projects = projects;
     }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
+    }
+
+    public List<String> getRedes() {
+        return redes;
+    }
+
+    public void setRedes(List<String> redes) {
+        this.redes = redes;
+    }
+
+    
     
 }

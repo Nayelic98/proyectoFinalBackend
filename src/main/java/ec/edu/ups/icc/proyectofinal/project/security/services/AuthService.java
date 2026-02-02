@@ -61,11 +61,12 @@ public class AuthService {
                 .collect(Collectors.toSet());
 
         return new AuthResponseDto(
-                jwt,
-                userDetails.getId(),
-                userDetails.getNombre(),
-                userDetails.getUsername(), // Retorna el contacto
-                roles);
+        jwt,
+        userDetails.getId(),
+        userDetails.getNombre(),
+        userDetails.getUsername(),
+        roles, // El Set va aquí
+        userDetails.getMustChangePassword());
     }
 
     @Transactional
@@ -79,7 +80,8 @@ public class AuthService {
         user.setContacto(registerRequest.getContacto());
         user.setDescripcion(registerRequest.getDescripcion());
         user.setFoto(registerRequest.getFoto());
-        user.setRedes(registerRequest.getRedes());
+// Dentro del método register
+user.setRedes(java.util.List.of(registerRequest.getRedes()));
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         
         // --- NUEVA LÓGICA DE ROLES ---
@@ -107,25 +109,30 @@ public class AuthService {
                 .collect(Collectors.toSet());
 
         return new AuthResponseDto(
-                jwt,
-                user.getId(),
-                user.getNombre(),
-                user.getContacto(),
-                roleNames);
-    }
+        jwt,
+        user.getId(),
+        user.getNombre(),
+        user.getContacto(),
+        roleNames,
+        false);// Por defecto false en registro normal
+        }
     @Transactional
 public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
-    // 1. Buscar si el usuario ya existe en Postgres por su contacto (email de Google)
     UserEntity user = userRepository.findByContacto(googleLoginRequest.getContacto())
             .orElseGet(() -> {
-                // 2. Si NO existe, creamos uno nuevo (Registro automático)
                 UserEntity newUser = new UserEntity();
                 newUser.setNombre(googleLoginRequest.getNombre());
                 newUser.setContacto(googleLoginRequest.getContacto());
-                // Contraseña dummy porque es requerida en DB, pero entrará por Google
                 newUser.setPassword(passwordEncoder.encode("GOOGLE_PRIVATE_AUTH"));
                 newUser.setDescripcion("Usuario registrado vía Google");
-                // Asignar rol de USER por defecto
+                
+                // Foto de Google o default
+                String urlFoto = googleLoginRequest.getFoto();
+                newUser.setFoto((urlFoto != null && !urlFoto.isEmpty()) ? urlFoto : "default-avatar.png");
+                
+                newUser.setRedes(new java.util.ArrayList<>());                newUser.setEspecialidad("General"); 
+                newUser.setMustChangePassword(false);
+
                 RoleEntity defaultRole = roleRepository.findByName(RoleName.ROLE_USER)
                         .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado."));
                 newUser.getRoles().add(defaultRole);
@@ -133,24 +140,41 @@ public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
                 return userRepository.save(newUser);
             });
 
-    // 3. Crear el UserDetails a partir del usuario (existente o nuevo)
     UserDetailsImpl userDetails = UserDetailsImpl.build(user);
-
-    // 4. Generar el Token JWT usando tu JwtUtil
-    // Usamos el método que ya tienes: generateTokenFromUserDetails
     String jwt = jwtUtil.generateTokenFromUserDetails(userDetails);
 
-    // 5. Obtener los nombres de los roles para la respuesta
     Set<String> roles = userDetails.getAuthorities().stream()
-            .map(auth -> auth.getAuthority())
-            .collect(Collectors.toSet());
+        .map(auth -> auth.getAuthority()
+                         .replace("ROLE_", "") // Quita el prefijo
+                         .toLowerCase())       // Lo deja en minúsculas (admin, user, etc.)
+        .collect(Collectors.toSet());
 
-    // 6. Retornar el DTO que Angular está esperando
     return new AuthResponseDto(
-            jwt,
-            user.getId(),
-            user.getNombre(),
-            user.getContacto(),
-            roles);
+        jwt, 
+        user.getId(), 
+        user.getNombre(), 
+        user.getContacto(), 
+        roles,
+        false // Usuarios de Google no suelen requerir cambio de clave
+);
 }
+@Transactional
+    public void updatePassword(String contacto, String newPassword) {
+        System.out.println("Procesando actualización para: " + contacto);
+        
+        if (contacto == null || contacto.trim().isEmpty()) {
+            throw new RuntimeException("Datos de actualización incompletos: contacto es nulo");
+        }
+
+        UserEntity user = userRepository.findByContacto(contacto)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con contacto: " + contacto));
+        
+        // Encriptamos la nueva contraseña antes de guardar
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(false); 
+        
+        userRepository.save(user);
+        System.out.println("Contraseña actualizada con éxito en la BD.");
+    }
+
 }
