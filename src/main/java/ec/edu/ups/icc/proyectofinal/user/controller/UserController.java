@@ -52,6 +52,15 @@ public class UserController {
     public ResponseEntity<UserResponseDto> getMyProfile(Principal principal) {
         return ResponseEntity.ok(userService.findByContacto(principal.getName()));
     }
+    // UserController.java
+
+
+// Por esto (especificando el nombre "id"):
+@PutMapping("/{id}")
+public ResponseEntity<UserResponseDto> update(@PathVariable("id") Long id, @RequestBody UpdateUserDto dto) {
+    UserResponseDto response = userService.update(id, dto);
+    return ResponseEntity.ok(response);
+}
     // Endpoint para que el programador logueado actualice su propio perfil
     @PutMapping("/profile/update")
     @PreAuthorize("hasRole('PROGRAMMER')")
@@ -75,25 +84,36 @@ public ResponseEntity<List<SolicitudPostulacionEntity>> getSolicitudes() {
     return ResponseEntity.ok(userService.findAllSolicitudes());
 }
 
-// Cambiar estado (Aprobar/Rechazar)
+
+// 1. Permite que tanto USER como PROGRAMMER puedan ver su solicitud
+@GetMapping("/mi-solicitud")
+@PreAuthorize("hasAnyRole('USER', 'PROGRAMMER')") // Cambiado para que no falle al ser aprobado
+public ResponseEntity<SolicitudPostulacionEntity> getMiSolicitud(Principal principal) {
+    System.out.println(">>> [DEBUG] Buscando solicitud para: " + principal.getName());
+    SolicitudPostulacionEntity solicitud = userService.obtenerSolicitudPorEmail(principal.getName());
+    
+    if (solicitud == null) {
+        return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.ok(solicitud);
+}
+
+// 2. Agregamos prints de debug al cambio de estado para que LOS VEAS EN LA CONSOLA DEL IDE
 @PatchMapping("/solicitudes-postulacion/{id}/estado")
 @PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<Void> cambiarEstadoSolicitud(
         @PathVariable("id") Long id, 
         @RequestBody String nuevoEstado) {
-    userService.actualizarEstadoSolicitud(id, nuevoEstado);
-    return ResponseEntity.noContent().build();
-}
-@GetMapping("/mi-solicitud")
-@PreAuthorize("hasRole('USER')")
-public ResponseEntity<SolicitudPostulacionEntity> getMiSolicitud(Principal principal) {
-    System.out.println(">>> Buscando solicitud para el usuario: " + principal.getName());
-    SolicitudPostulacionEntity solicitud = userService.obtenerSolicitudPorEmail(principal.getName());
     
-    if (solicitud == null) {
-        return ResponseEntity.noContent().build(); // Devuelve 204 en lugar de error
-    }
-    return ResponseEntity.ok(solicitud);
+    // ESTOS PRINTS APARECERÁN EN TU IDE (IntelliJ/Eclipse)
+    System.out.println(">>> [ADMIN] Petición de cambio de estado recibida");
+    System.out.println(">>> [ADMIN] ID de solicitud: " + id);
+    System.out.println(">>> [ADMIN] Valor recibido: " + nuevoEstado);
+
+    userService.actualizarEstadoSolicitud(id, nuevoEstado);
+    
+    System.out.println(">>> [ADMIN] ¡Proceso completado con éxito en el Service!");
+    return ResponseEntity.noContent().build();
 }
 
     @GetMapping("/programadores")

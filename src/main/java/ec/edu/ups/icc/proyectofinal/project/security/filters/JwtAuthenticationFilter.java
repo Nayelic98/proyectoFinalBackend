@@ -36,39 +36,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtProperties = jwtProperties;
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-        try {
-            String jwt = getJwtFromRequest(request);
-
-            if (StringUtils.hasText(jwt) && jwtUtil.validateToken(jwt)) {
-                String email = jwtUtil.getEmailFromToken(jwt);
-                
-                // Log para debuguear en la consola de Java
-                logger.info("JWT detectado. Email extraído: {}", email);
-
-                if (email != null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
-
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.info("Usuario autenticado exitosamente: {}", email);
-                }
-            }
-        } catch (Exception ex) {
-            logger.error("No se pudo establecer la autenticación del usuario", ex);
-        }
-
+   @Override
+protected void doFilterInternal(HttpServletRequest request,
+                                HttpServletResponse response,
+                                FilterChain filterChain) throws ServletException, IOException {
+    
+    // 1. SALIDA RÁPIDA: Si es una ruta de /auth/, no proceses el JWT
+    String path = request.getServletPath();
+    if (path.startsWith("/auth/")) {
         filterChain.doFilter(request, response);
+        return;
     }
+
+    try {
+        String jwt = getJwtFromRequest(request);
+
+        // Solo procesamos si el JWT no es nulo y es válido
+        if (StringUtils.hasText(jwt) && jwtUtil.validateToken(jwt)) {
+            String email = jwtUtil.getEmailFromToken(jwt);
+            
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        }
+    } catch (Exception ex) {
+        // Logueamos pero NO bloqueamos la petición aquí, 
+        // de eso se encarga el SecurityConfig después
+        logger.error("Error validando el token JWT: {}", ex.getMessage());
+    }
+
+    filterChain.doFilter(request, response);
+}
 
     // Cambia temporalmente esto en JwtAuthenticationFilter.java para probar:
 private String getJwtFromRequest(HttpServletRequest request) {

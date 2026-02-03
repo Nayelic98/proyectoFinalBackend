@@ -42,7 +42,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequest) {
-
+        // Al usar @Valid, si el nombre llega nulo de Angular, Spring devolverá 400 Bad Request automáticamente
         AuthResponseDto response = authService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

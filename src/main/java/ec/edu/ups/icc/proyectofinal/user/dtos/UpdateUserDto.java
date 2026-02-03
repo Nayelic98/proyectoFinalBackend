@@ -1,5 +1,7 @@
 package ec.edu.ups.icc.proyectofinal.user.dtos;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -21,7 +23,7 @@ public class UpdateUserDto {
     public String foto; // Aquí recibiremos el Base64 desde Angular
     
     // Cambiamos String a List<String> para recibir múltiples enlaces
-    public java.util.List<String> redes; 
+    public List<String> redes; 
 
     public UpdateUserDto() {}
 

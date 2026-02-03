@@ -72,45 +72,38 @@ public List<SolicitudPostulacionEntity> findAllSolicitudes() {
 @Override
 @Transactional
 public void actualizarEstadoSolicitud(Long id, String nuevoEstado) {
-    SolicitudPostulacionEntity solicitud = solicitudRepo.findById(id)
-            .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
+    // 1. Limpiar el estado recibido
+    String estadoLimpio = nuevoEstado.replace("\"", "").trim().toUpperCase();
+    System.out.println(">>> Iniciando actualización - ID Solicitud: " + id + " a Estado: " + estadoLimpio);
 
-    String estadoLimpio = nuevoEstado.replace("\"", "").trim();
+    SolicitudPostulacionEntity solicitud = solicitudRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Error: Solicitud ID " + id + " no existe."));
+
     solicitud.setEstado(estadoLimpio);
 
     if ("APROBADO".equals(estadoLimpio)) {
-    Optional<UserEntity> userOpt = userRepo.findByContacto(solicitud.getEmail());
-    
-    UserEntity usuario;
-    if (userOpt.isPresent()) {
-        usuario = userOpt.get();
-        solicitud.setTemporalPassword("USA_TU_CLAVE_ACTUAL"); 
-    } else {
-        usuario = new UserEntity();
-        usuario.setContacto(solicitud.getEmail());
-        usuario.setNombre(solicitud.getNombre());
+        // 2. IMPORTANTE: Usamos trim() y lowercase para asegurar que los emails coincidan
+        String emailBusqueda = solicitud.getEmail().trim().toLowerCase();
         
-        String passPlano = solicitud.getNombre().trim().split(" ")[0] + "1234";
-        usuario.setPassword(passwordEncoder.encode(passPlano));
-        usuario.setMustChangePassword(true);
-        solicitud.setTemporalPassword(passPlano);
+        UserEntity usuario = userRepo.findByContacto(emailBusqueda)
+                .orElseThrow(() -> new RuntimeException("ERROR CRÍTICO: No existe un usuario con el email: " + emailBusqueda));
+
+        RoleEntity roleProgrammer = roleRepo.findByName(RoleName.ROLE_PROGRAMMER)
+                .orElseThrow(() -> new RuntimeException("ERROR: El rol ROLE_PROGRAMMER no existe en la tabla roles."));
+
+        // 3. Forzar la actualización de la colección de roles
+        usuario.getRoles().clear();
+        userRepo.saveAndFlush(usuario); // Borra roles anteriores en la DB de inmediato
+
+        usuario.getRoles().add(roleProgrammer);
+        userRepo.save(usuario); 
+        
+        System.out.println(">>> ÉXITO: Rol PROGRAMMER asignado a: " + emailBusqueda);
     }
 
-    // BUSCAMOS EL ROL
-    RoleEntity role = roleRepo.findByName(RoleName.ROLE_PROGRAMMER)
-            .orElseThrow(() -> new RuntimeException("Rol ROLE_PROGRAMMER no encontrado"));
-    
-    // LIMPIEZA Y ASIGNACIÓN SEGURA
-    if (usuario.getRoles() == null) {
-        usuario.setRoles(new HashSet<>());
-    }
-    usuario.getRoles().clear(); // Quitamos ROLE_USER
-    usuario.getRoles().add(role); // Añadimos ROLE_PROGRAMMER
-    
-    // GUARDADO EXPLÍCITO
-    userRepo.saveAndFlush(usuario); 
-    System.out.println("Rol PROGRAMMER asignado a: " + usuario.getContacto());
-}
+    // 4. Guardar el estado de la solicitud y FORZAR escritura en Neon
+    solicitudRepo.saveAndFlush(solicitud);
+    System.out.println(">>> ÉXITO: Estado de solicitud actualizado en DB.");
 }
 @Override
 public SolicitudPostulacionEntity obtenerSolicitudPorEmail(String email) {
@@ -200,12 +193,15 @@ public UserResponseDto update(Long id, UpdateUserDto dto) {
     if (dto.descripcion != null) existing.setDescripcion(dto.descripcion);
     if (dto.foto != null) existing.setFoto(dto.foto);
     
-    // IMPORTANTE: Manejo de la lista de redes
-    if (dto.redes != null) {
-        // En JPA/Hibernate es mejor limpiar y añadir para no romper la relación
+    // En UserServiceImpl.java -> método update
+if (dto.redes != null) {
+    if (existing.getRedes() == null) {
+        existing.setRedes(new java.util.ArrayList<>());
+    } else {
         existing.getRedes().clear();
-        existing.getRedes().addAll(dto.redes);
     }
+    existing.getRedes().addAll(dto.redes);
+}
 
     // 3. Guardamos la entidad original modificada
     UserEntity saved = userRepo.save(existing);

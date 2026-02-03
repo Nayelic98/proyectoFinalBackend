@@ -70,93 +70,110 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponseDto register(RegisterRequestDto registerRequest) {
-        if (userRepository.existsByContacto(registerRequest.getContacto())) {
-            throw new ConflictException("El contacto ya está registrado");
-        }
+public AuthResponseDto register(RegisterRequestDto registerRequest) {
+    if (userRepository.existsByContacto(registerRequest.getContacto())) {
+        throw new ConflictException("El contacto ya está registrado");
+    }
 
-        UserEntity user = new UserEntity();
-        user.setNombre(registerRequest.getNombre());
-        user.setContacto(registerRequest.getContacto());
-        user.setDescripcion(registerRequest.getDescripcion());
-        user.setFoto(registerRequest.getFoto());
-// Dentro del método register
-user.setRedes(java.util.List.of(registerRequest.getRedes()));
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        
-        // --- NUEVA LÓGICA DE ROLES ---
-        String roleRequest = registerRequest.getRole(); // Ej: "programmer" o "user"
-        RoleEntity roleEntity;
+    UserEntity user = new UserEntity();
+    // Si el nombre viene nulo del frontend, usamos la primera parte del correo
+    String nombreDefault = (registerRequest.getNombre() != null) ? registerRequest.getNombre() : registerRequest.getContacto().split("@")[0];
+    user.setNombre(nombreDefault);
+    
+    user.setContacto(registerRequest.getContacto());
+    
+    // VALORES POR DEFECTO para campos obligatorios que no están en tu form de Angular
+    user.setDescripcion("Usuario recién registrado");
+    user.setFoto("default-avatar.png");
+    user.setEspecialidad("General");
+    user.setRedes(new java.util.ArrayList<>());
+    
+    user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+    user.setMustChangePassword(false); 
 
-        if (roleRequest != null && roleRequest.equalsIgnoreCase("programmer")) {
-            roleEntity = roleRepository.findByName(RoleName.ROLE_PROGRAMMER)
-                .orElseThrow(() -> new RuntimeException("Error: Rol PROGRAMMER no encontrado."));
-        } else {
-            roleEntity = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado."));
-        }
+    // Asignar Rol por defecto (ROLE_USER)
+    RoleEntity roleEntity = roleRepository.findByName(RoleName.ROLE_USER)
+            .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado."));
+    user.getRoles().add(roleEntity);
 
-        user.getRoles().add(roleEntity); // Añadimos al Set<RoleEntity>
-        // -----------------------------
+    user = userRepository.save(user);
 
-        user = userRepository.save(user);
+    // Generar Token para que entre directo tras registrarse
+    UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+    String jwt = jwtUtil.generateTokenFromUserDetails(userDetails);
+    
+    Set<String> roleNames = userDetails.getAuthorities().stream()
+            .map(auth -> auth.getAuthority())
+            .collect(Collectors.toSet());
 
-        UserDetailsImpl userDetails = UserDetailsImpl.build(user);
-        String jwt = jwtUtil.generateTokenFromUserDetails(userDetails);
-        
-        Set<String> roleNames = userDetails.getAuthorities().stream()
-                .map(auth -> auth.getAuthority())
-                .collect(Collectors.toSet());
-
-        return new AuthResponseDto(
+    return new AuthResponseDto(
         jwt,
         user.getId(),
         user.getNombre(),
         user.getContacto(),
         roleNames,
-        false);// Por defecto false en registro normal
-        }
-    @Transactional
+        false
+    );
+}
+   @Transactional
 public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
+    // 1. Buscar si el usuario existe o crear uno nuevo con valores seguros
     UserEntity user = userRepository.findByContacto(googleLoginRequest.getContacto())
             .orElseGet(() -> {
                 UserEntity newUser = new UserEntity();
+                
+                // Datos básicos de Google
                 newUser.setNombre(googleLoginRequest.getNombre());
                 newUser.setContacto(googleLoginRequest.getContacto());
-                newUser.setPassword(passwordEncoder.encode("GOOGLE_PRIVATE_AUTH"));
-                newUser.setDescripcion("Usuario registrado vía Google");
                 
-                // Foto de Google o default
+                // Evitar NullPointerException/Error 500: Llenar campos obligatorios (nullable = false)
+                
+                // Generamos un password aleatorio seguro. El usuario no lo sabrá, 
+                // pero cumple con la restricción de la DB y permite usar BCrypt después.
+                newUser.setPassword(passwordEncoder.encode("GOOGLE_AUTH_" + java.util.UUID.randomUUID()));
+                
+                // Descripción obligatoria según tu UserEntity
+                newUser.setDescripcion("Usuario registrado automáticamente vía Google");
+                
+                // Manejo de foto obligatoria
                 String urlFoto = googleLoginRequest.getFoto();
                 newUser.setFoto((urlFoto != null && !urlFoto.isEmpty()) ? urlFoto : "default-avatar.png");
                 
-                newUser.setRedes(new java.util.ArrayList<>());                newUser.setEspecialidad("General"); 
-                newUser.setMustChangePassword(false);
+                // Especialidad obligatoria (si aplica) y redes inicializadas
+                newUser.setEspecialidad("General");
+                newUser.setRedes(new java.util.ArrayList<>()); 
 
+                // Lógica Híbrida: Forzar cambio de contraseña para que el usuario 
+                // cree su propia clave y pueda entrar de forma tradicional también.
+                newUser.setMustChangePassword(true);
+
+                // Asignación de Rol obligatoria para que Neon no rechace el registro
                 RoleEntity defaultRole = roleRepository.findByName(RoleName.ROLE_USER)
-                        .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado."));
+                        .orElseThrow(() -> new RuntimeException("ERROR CRÍTICO: El rol ROLE_USER no existe en la DB."));
                 newUser.getRoles().add(defaultRole);
                 
+                // Guardar y retornar el nuevo usuario
                 return userRepository.save(newUser);
             });
 
+    // 2. Generación de Seguridad (JWT)
     UserDetailsImpl userDetails = UserDetailsImpl.build(user);
     String jwt = jwtUtil.generateTokenFromUserDetails(userDetails);
 
-    Set<String> roles = userDetails.getAuthorities().stream()
-        .map(auth -> auth.getAuthority()
-                         .replace("ROLE_", "") // Quita el prefijo
-                         .toLowerCase())       // Lo deja en minúsculas (admin, user, etc.)
-        .collect(Collectors.toSet());
+    // 3. Mapeo de roles conservando el prefijo ROLE_ para compatibilidad con Angular
+    java.util.Set<String> roles = userDetails.getAuthorities().stream()
+            .map(auth -> auth.getAuthority()) 
+            .collect(java.util.stream.Collectors.toSet());
 
+    // 4. Respuesta al Frontend
     return new AuthResponseDto(
-        jwt, 
-        user.getId(), 
-        user.getNombre(), 
-        user.getContacto(), 
-        roles,
-        false // Usuarios de Google no suelen requerir cambio de clave
-);
+            jwt, 
+            user.getId(), 
+            user.getNombre(), 
+            user.getContacto(), 
+            roles,
+            user.isMustChangePassword() // Indica a Angular si debe redirigir a /must-change-password
+    );
 }
 @Transactional
     public void updatePassword(String contacto, String newPassword) {

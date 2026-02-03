@@ -71,29 +71,27 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-    .requestMatchers("/auth/**").permitAll()
-    .requestMatchers("/status/**").permitAll()
-    .requestMatchers("/actuator/**").permitAll()
-    .requestMatchers("/api/users/mi-solicitud").authenticated() 
-// O si usas roles:
-.requestMatchers("/api/users/mi-solicitud").hasAnyRole("USER", "ADMIN")
-    
-    // 1. Usuarios/Me y Programadores
-    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/create-programmer").hasRole("ADMIN")
-.requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/programadores").permitAll()
-    .requestMatchers("/api/users/me").authenticated()
+            // 1. RUTAS TOTALMENTE PÚBLICAS (Sin Token)
+            .requestMatchers("/auth/**").permitAll() // <--- AQUÍ ENTRA TU REGISTER
+            .requestMatchers("/status/**").permitAll()
+            .requestMatchers("/actuator/**").permitAll()
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/programadores").permitAll()
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/proyectos/**").permitAll()
 
-    // 2. PROYECTOS: Reglas específicas por método
-    // El GET es público
-    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/proyectos/**").permitAll() 
-    
-    // El resto de métodos (POST, PUT, DELETE) requieren rol
-    .requestMatchers("/api/proyectos/**").hasAnyRole("ADMIN", "PROGRAMMER")
-    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/postular").authenticated()
-            // Dentro de .authorizeHttpRequests:
-.requestMatchers("/api/users/solicitudes-postulacion/**").hasRole("ADMIN")
-    .anyRequest().authenticated()
-);
+            // 2. RUTAS PARA CUALQUIER USUARIO LOGUEADO (USER, ADMIN, PROGRAMMER)
+            .requestMatchers("/api/users/me").authenticated()
+            .requestMatchers("/api/users/mi-solicitud").authenticated()
+            .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/postular").authenticated()
+
+            // 3. RUTAS CON ROLES ESPECÍFICOS
+            .requestMatchers("/api/proyectos/**").hasAnyRole("ADMIN", "PROGRAMMER")
+            .requestMatchers("/api/users/solicitudes-postulacion/**").hasRole("ADMIN")
+            .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/create-programmer").hasRole("ADMIN")
+            
+            // 4. CUALQUIER OTRA RUTA
+            .anyRequest().authenticated()
+        );
+
     http.authenticationProvider(authenticationProvider());
     http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
