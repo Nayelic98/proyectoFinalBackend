@@ -41,13 +41,16 @@ public class UserMapper {
         );
     }   
 
-    // Model -> DTO de Respuesta (Lo que ve el cliente)
     public static UserResponseDto toResponse(User user) {
-        UserResponseDto dto = new UserResponseDto();
-        dto.id = user.getId();
-        dto.nombre = user.getNombre();
-        dto.contacto = user.getContacto();
-        dto.role = user.getRole();
-        return dto;
-    }
+    UserResponseDto dto = new UserResponseDto();
+    dto.id = user.getId();
+    dto.nombre = user.getNombre();
+    dto.contacto = user.getContacto();
+    
+    // Si user.getRole() devuelve un String, esto está bien.
+    // Si no, asegúrate de extraer el nombre del rol principal.
+    dto.role = (user.getRole() != null) ? user.getRole() : "ROLE_USER"; 
+    
+    return dto;
+}
 }
