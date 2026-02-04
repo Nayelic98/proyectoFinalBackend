@@ -123,8 +123,8 @@ public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
                 newUser.setNombre(googleLoginRequest.getNombre());
                 newUser.setContacto(googleLoginRequest.getContacto());
                 // Contraseña dummy porque es requerida en DB, pero entrará por Google
-                newUser.setPassword(passwordEncoder.encode("GOOGLE_AUTH_EXTERNAL_PWD"));
-                
+                newUser.setPassword(passwordEncoder.encode("GOOGLE_PRIVATE_AUTH"));
+                newUser.setDescripcion("Usuario registrado vía Google");
                 // Asignar rol de USER por defecto
                 RoleEntity defaultRole = roleRepository.findByName(RoleName.ROLE_USER)
                         .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado."));
