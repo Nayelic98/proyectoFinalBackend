@@ -48,12 +48,10 @@ public class UserDetailsImpl implements UserDetails {
                 user.getPassword(), // ¡No olvides pasar el password!
                 authorities);
     }
-    @Override
-public Collection<? extends GrantedAuthority> getAuthorities() {
-    return roles.stream()
-            .map(rol -> new SimpleGrantedAuthority(rol.getName().name()))
-            .collect(Collectors.toList());
-}
+   @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities; 
+    }
 
     public Long getId() { return id; }
     
