@@ -23,7 +23,8 @@ public class RoleEntity extends BaseModel {
 
     @Column(length = 200)
     private String description;
-
+    @Column(nullable = false)
+private boolean deleted = false; 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     private Set<UserEntity> users = new HashSet<>();
 
