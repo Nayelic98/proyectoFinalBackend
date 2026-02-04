@@ -49,9 +49,11 @@ public class UserDetailsImpl implements UserDetails {
                 authorities);
     }
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
-    }
+public Collection<? extends GrantedAuthority> getAuthorities() {
+    return roles.stream()
+            .map(rol -> new SimpleGrantedAuthority(rol.getName().name()))
+            .collect(Collectors.toList());
+}
 
     public Long getId() { return id; }
     
