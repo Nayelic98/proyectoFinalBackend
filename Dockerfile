@@ -6,7 +6,7 @@ FROM gradle:9.2.1-jdk17 AS build
 WORKDIR /app
 
 # Copiar archivos de configuración para cachear dependencias
-COPY build.gradle.kts settings.gradle.kts ./
+COPY build.gradle settings.gradle ./
 COPY gradle ./gradle
 RUN gradle dependencies --no-daemon
 
