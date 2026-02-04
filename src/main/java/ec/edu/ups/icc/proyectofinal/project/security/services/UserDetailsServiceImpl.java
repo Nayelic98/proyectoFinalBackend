@@ -18,11 +18,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     @Override
-    @Transactional
-    public UserDetails loadUserByUsername(String contacto) throws UsernameNotFoundException {
-        UserEntity user = userRepository.findByContacto(contacto)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con contacto: " + contacto));
+@Transactional
+public UserDetails loadUserByUsername(String contacto) throws UsernameNotFoundException {
+    UserEntity user = userRepository.findByContacto(contacto)
+        .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con contacto: " + contacto));
 
-        return UserDetailsImpl.build(user);
-    }
+    return UserDetailsImpl.build(user);
+}
 }

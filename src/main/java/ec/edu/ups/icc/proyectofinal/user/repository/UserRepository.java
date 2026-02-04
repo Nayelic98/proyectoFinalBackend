@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByContacto(String contacto);
 
     // Buscar programadores por nombre (ignorando mayúsculas/minúsculas)
-    List<UserEntity> findByNombreContainingIgnoreCaseAndRole(String nombre, String role);
+    List<UserEntity> findByNombreContainingIgnoreCase(String nombre);
 
     // Verificar existencia por email
     boolean existsByContacto(String contacto);
