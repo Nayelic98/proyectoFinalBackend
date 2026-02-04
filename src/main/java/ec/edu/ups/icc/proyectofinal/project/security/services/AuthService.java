@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ec.edu.ups.icc.proyectofinal.exceptions.domain.ConflictException;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.AuthResponseDto;
+import ec.edu.ups.icc.proyectofinal.project.security.dtos.GoogleLoginRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.LoginRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.RegisterRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.models.RoleEntity;
@@ -42,6 +43,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
+    
     @Transactional(readOnly = true)
     public AuthResponseDto login(LoginRequestDto loginRequest) {
         // Se usa contacto en lugar de email para el login
@@ -111,4 +113,44 @@ public class AuthService {
                 user.getContacto(),
                 roleNames);
     }
+    @Transactional
+public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
+    // 1. Buscar si el usuario ya existe en Postgres por su contacto (email de Google)
+    UserEntity user = userRepository.findByContacto(googleLoginRequest.getContacto())
+            .orElseGet(() -> {
+                // 2. Si NO existe, creamos uno nuevo (Registro automático)
+                UserEntity newUser = new UserEntity();
+                newUser.setNombre(googleLoginRequest.getNombre());
+                newUser.setContacto(googleLoginRequest.getContacto());
+                // Contraseña dummy porque es requerida en DB, pero entrará por Google
+                newUser.setPassword(passwordEncoder.encode("GOOGLE_AUTH_EXTERNAL_PWD"));
+                
+                // Asignar rol de USER por defecto
+                RoleEntity defaultRole = roleRepository.findByName(RoleName.ROLE_USER)
+                        .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado."));
+                newUser.getRoles().add(defaultRole);
+                
+                return userRepository.save(newUser);
+            });
+
+    // 3. Crear el UserDetails a partir del usuario (existente o nuevo)
+    UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+
+    // 4. Generar el Token JWT usando tu JwtUtil
+    // Usamos el método que ya tienes: generateTokenFromUserDetails
+    String jwt = jwtUtil.generateTokenFromUserDetails(userDetails);
+
+    // 5. Obtener los nombres de los roles para la respuesta
+    Set<String> roles = userDetails.getAuthorities().stream()
+            .map(auth -> auth.getAuthority())
+            .collect(Collectors.toSet());
+
+    // 6. Retornar el DTO que Angular está esperando
+    return new AuthResponseDto(
+            jwt,
+            user.getId(),
+            user.getNombre(),
+            user.getContacto(),
+            roles);
+}
 }

@@ -1,11 +1,14 @@
 package ec.edu.ups.icc.proyectofinal.project.security.controllers;
 
 import jakarta.validation.Valid;
+
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.AuthResponseDto;
+import ec.edu.ups.icc.proyectofinal.project.security.dtos.GoogleLoginRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.LoginRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.dtos.RegisterRequestDto;
 import ec.edu.ups.icc.proyectofinal.project.security.services.AuthService;
@@ -22,7 +25,12 @@ public class AuthController {
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
-
+    @PostMapping("/google-login")
+    public ResponseEntity<AuthResponseDto> googleLogin(@Valid @RequestBody GoogleLoginRequestDto googleLoginRequest) {
+        // Delegamos todo al servicio
+        AuthResponseDto response = authService.googleLogin(googleLoginRequest);
+        return ResponseEntity.ok(response);
+    }
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
 
