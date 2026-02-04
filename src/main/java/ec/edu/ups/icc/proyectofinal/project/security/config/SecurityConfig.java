@@ -1,5 +1,8 @@
 package ec.edu.ups.icc.proyectofinal.project.security.config;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +17,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import ec.edu.ups.icc.proyectofinal.project.security.filters.JwtAuthenticationEntryPoint;
 import ec.edu.ups.icc.proyectofinal.project.security.filters.JwtAuthenticationFilter;
@@ -57,22 +63,39 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(unauthorizedHandler))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+        http
+            // 1. AÑADIR ESTO PARA ACTIVAR LOS CORS
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
+            .csrf(AbstractHttpConfigurer::disable)
+            .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint(unauthorizedHandler))
+            .sessionManagement(session -> session
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/status/**").permitAll()
+                    .requestMatchers("/actuator/**").permitAll()
+                    .anyRequest().authenticated());
 
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/status/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-
-                        .anyRequest().authenticated());
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // 2. AÑADIR ESTE BEAN PARA CONFIGURAR LOS PERMISOS
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Permite el origen de tu frontend (ajusta si usas otro puerto)
+        configuration.setAllowedOrigins(List.of("http://localhost:4200", "https://tu-dominio-frontend.vercel.app")); 
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
 }
