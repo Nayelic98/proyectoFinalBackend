@@ -28,13 +28,13 @@ public class AdviceEntity extends BaseModel {
 
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private UserEntity usuario; 
+    @ManyToOne(fetch = FetchType.EAGER) // ¡Cambia esto!
+@JoinColumn(name = "usuario_id", nullable = false)
+private UserEntity usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "programador_id", nullable = false)
-    private UserEntity programador; 
+@ManyToOne(fetch = FetchType.EAGER) // ¡Y esto también!
+@JoinColumn(name = "programador_id", nullable = false)
+private UserEntity programador;
 
     public AdviceEntity() {
         this.createdAt = LocalDateTime.now();
