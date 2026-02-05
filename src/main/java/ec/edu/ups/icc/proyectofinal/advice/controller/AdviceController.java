@@ -44,7 +44,16 @@ public ResponseEntity<List<AdviceResponseDto>> getByUsuario(@PathVariable("id") 
     return ResponseEntity.ok(adviceService.findByUsuarioId(id));
 }
 @GetMapping
-public ResponseEntity<List<AdviceResponseDto>> getAll() {
-    return ResponseEntity.ok(adviceService.findAll());
-}
+    public ResponseEntity<List<AdviceResponseDto>> getAll() {
+        System.out.println(">>> [LOG BACKEND] Admin solicitando todas las asesorías...");
+        try {
+            List<AdviceResponseDto> asesorias = adviceService.findAll();
+            System.out.println(">>> [LOG BACKEND] Éxito: Se encontraron " + asesorias.size() + " registros.");
+            return ResponseEntity.ok(asesorias);
+        } catch (Exception e) {
+            System.err.println(">>> [ERROR BACKEND] Falló el mapeo de asesorías: " + e.getMessage());
+            e.printStackTrace(); // Esto saldrá en los logs de Render
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
