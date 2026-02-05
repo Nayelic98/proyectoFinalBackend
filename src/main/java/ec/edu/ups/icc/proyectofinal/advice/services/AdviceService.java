@@ -11,4 +11,5 @@ public interface AdviceService {
 
     AdviceResponseDto create(CreateAdviceDto dto);
     AdviceResponseDto update(Long id, UpdateAdviceDto dto);
+    List<AdviceResponseDto> findAll();
 }

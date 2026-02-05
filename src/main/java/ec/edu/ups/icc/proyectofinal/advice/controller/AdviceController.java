@@ -43,4 +43,8 @@ public ResponseEntity<AdviceResponseDto> update(@PathVariable("id") Long id, @Re
 public ResponseEntity<List<AdviceResponseDto>> getByUsuario(@PathVariable("id") Long id) {
     return ResponseEntity.ok(adviceService.findByUsuarioId(id));
 }
+@GetMapping
+public ResponseEntity<List<AdviceResponseDto>> getAll() {
+    return ResponseEntity.ok(adviceService.findAll());
+}
 }

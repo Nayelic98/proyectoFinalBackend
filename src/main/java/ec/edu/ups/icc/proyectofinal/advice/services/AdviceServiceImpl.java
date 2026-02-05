@@ -120,4 +120,15 @@ public List<AdviceResponseDto> findByProgramadorId(Long programadorId) {
             .map(this::mapToResponseDto)
             .collect(Collectors.toList());
 }
+@Override
+@Transactional
+public List<AdviceResponseDto> findAll() {
+    // Obtenemos todas las entidades desde el repositorio
+    List<AdviceEntity> entidades = adviceRepository.findAll();
+    
+    // Transformamos la lista de entidades a la lista de DTOs de respuesta
+    return entidades.stream()
+            .map(this::mapToResponseDto)
+            .collect(Collectors.toList());
+}
 }
