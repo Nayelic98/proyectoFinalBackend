@@ -70,7 +70,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .requestMatchers("/actuator/**").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/programadores").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/proyectos/**").permitAll()
-
+            .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/asesorias").hasRole("ADMIN")
             .requestMatchers("/api/users/me").authenticated()
             .requestMatchers("/api/users/mi-solicitud").authenticated()
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/postular").authenticated()
