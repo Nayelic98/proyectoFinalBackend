@@ -12,7 +12,7 @@ public class RegisterRequestDto {
 
     @NotBlank(message = "El contacto es obligatorio")
     @Size(max = 150, message = "El contacto no puede exceder 150 caracteres")
-    // Si el contacto siempre es un email, puedes volver a añadir @Email aquí
+
     private String contacto;
 
     @NotBlank(message = "La contraseña es obligatoria")
@@ -21,75 +21,57 @@ public class RegisterRequestDto {
              message = "La contraseña debe contener al menos una mayúscula, una minúscula y un número")
     private String password;
 
-    // Nuevos campos según tu UserEntity
     private String descripcion;
     private String foto;
     private String redes;
     private String role;
 
-    // Constructores
     public RegisterRequestDto() {
     }
-
     public RegisterRequestDto(String nombre, String contacto, String password) {
         this.nombre = nombre;
         this.contacto = contacto;
         this.password = password;
     }
-
-    // Getters y Setters corregidos
     public String getNombre() {
         return nombre;
     }
-
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
-
     public String getContacto() {
         return contacto;
     }
-
     public void setContacto(String contacto) {
         this.contacto = contacto;
     }
-
     public String getPassword() {
         return password;
     }
-
     public void setPassword(String password) {
         this.password = password;
     }
-
     public String getDescripcion() {
         return descripcion;
     }
-
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-
     public String getFoto() {
         return foto;
     }
-
     public void setFoto(String foto) {
         this.foto = foto;
     }
-
     public String getRedes() {
         return redes;
     }
-
     public void setRedes(String redes) {
         this.redes = redes;
     }
-
     public String getRole() {
         return role;
     }
-
     public void setRole(String role) {
         this.role = role;
     }

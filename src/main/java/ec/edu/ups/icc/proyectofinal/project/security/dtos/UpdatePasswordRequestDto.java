@@ -1,10 +1,9 @@
 package ec.edu.ups.icc.proyectofinal.project.security.dtos;
-
 public class UpdatePasswordRequestDto {
     private String contacto;
     private String newPassword;
 public UpdatePasswordRequestDto() {}
-    // Getters y Setters necesarios para que Spring lea el JSON
+
     public String getContacto() { return contacto; }
     public void setContacto(String contacto) { this.contacto = contacto; }
     public String getNewPassword() { return newPassword; }

@@ -24,9 +24,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ec.edu.ups.icc.proyectofinal.project.security.filters.JwtAuthenticationEntryPoint;
 import ec.edu.ups.icc.proyectofinal.project.security.filters.JwtAuthenticationFilter;
 import ec.edu.ups.icc.proyectofinal.project.security.services.UserDetailsServiceImpl;
-
-
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -43,24 +40,20 @@ public class SecurityConfig {
         this.unauthorizedHandler = unauthorizedHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
-
    @Bean
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
@@ -71,24 +64,21 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            // 1. RUTAS TOTALMENTE PÚBLICAS (Sin Token)
-            .requestMatchers("/auth/**").permitAll() // <--- AQUÍ ENTRA TU REGISTER
+            
+            .requestMatchers("/auth/**").permitAll() 
             .requestMatchers("/status/**").permitAll()
             .requestMatchers("/actuator/**").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/programadores").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/proyectos/**").permitAll()
 
-            // 2. RUTAS PARA CUALQUIER USUARIO LOGUEADO (USER, ADMIN, PROGRAMMER)
             .requestMatchers("/api/users/me").authenticated()
             .requestMatchers("/api/users/mi-solicitud").authenticated()
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/postular").authenticated()
 
-            // 3. RUTAS CON ROLES ESPECÍFICOS
             .requestMatchers("/api/proyectos/**").hasAnyRole("ADMIN", "PROGRAMMER")
             .requestMatchers("/api/users/solicitudes-postulacion/**").hasRole("ADMIN")
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/create-programmer").hasRole("ADMIN")
             
-            // 4. CUALQUIER OTRA RUTA
             .anyRequest().authenticated()
         );
 
@@ -97,11 +87,9 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
     return http.build();
 }
-    // 2. AÑADIR ESTE BEAN PARA CONFIGURAR LOS PERMISOS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite el origen de tu frontend (ajusta si usas otro puerto)
         configuration.setAllowedOrigins(List.of("http://localhost:4200", "https://front-end-integrador.onrender.com")); 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
@@ -111,5 +99,4 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 }

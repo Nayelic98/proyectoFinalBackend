@@ -14,17 +14,14 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
-
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
     private final ObjectMapper objectMapper;
-
     public JwtAuthenticationEntryPoint(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
-
     @Override
     public void commence(HttpServletRequest request,
             HttpServletResponse response,
@@ -32,10 +29,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         logger.error("Error de autenticación: {}", authException.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.UNAUTHORIZED, // Status 401
+                HttpStatus.UNAUTHORIZED, 
                 "Token de autenticación inválido o no proporcionado. " +
                         "Debe incluir un token válido en el header Authorization: Bearer <token>",
-                request.getRequestURI() // Path del endpoint (ej: /api/products)
+                request.getRequestURI() 
         );
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
