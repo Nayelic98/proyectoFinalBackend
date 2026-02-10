@@ -19,20 +19,14 @@ import ec.edu.ups.icc.proyectofinal.advice.services.AdviceService;
 
 @RestController
 @RequestMapping("/api/asesorias")
-@CrossOrigin(origins = "*") // Permite que Angular se conecte sin bloqueos de CORS
+@CrossOrigin(origins = "*") 
 public class AdviceController {
-
     private final AdviceService adviceService;
 
     public AdviceController(AdviceService adviceService) {
         this.adviceService = adviceService;
     }
 
-    /**
-     * 📌 GET /api/asesorias/programador/{id}
-     * Este es el método que tu Angular está llamando y dando error 500 actualmente.
-     */
-   // ESPECIFICA EL NOMBRE "id" DENTRO DE LA ANOTACIÓN
 @GetMapping("/programador/{id}")
 public ResponseEntity<List<AdviceResponseDto>> getByProgramador(@PathVariable("id") Long id) { 
     return ResponseEntity.ok(adviceService.findByProgramadorId(id));
@@ -41,19 +35,12 @@ public ResponseEntity<List<AdviceResponseDto>> getByProgramador(@PathVariable("i
 public ResponseEntity<AdviceResponseDto> create(@RequestBody CreateAdviceDto dto) {
     return ResponseEntity.ok(adviceService.create(dto));
 }
-
 @PutMapping("/{id}")
 public ResponseEntity<AdviceResponseDto> update(@PathVariable("id") Long id, @RequestBody UpdateAdviceDto dto) {
     return ResponseEntity.ok(adviceService.update(id, dto));
 }
-    /**
-     * 📌 POST /api/asesorias
-     * Para cuando el usuario envía el formulario de "Solicitar Asesoría".
-     */
     @GetMapping("/usuario/{id}")
 public ResponseEntity<List<AdviceResponseDto>> getByUsuario(@PathVariable("id") Long id) {
     return ResponseEntity.ok(adviceService.findByUsuarioId(id));
 }
-   
-
 }
