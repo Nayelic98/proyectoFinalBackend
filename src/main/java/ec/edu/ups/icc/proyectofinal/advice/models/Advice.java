@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import ec.edu.ups.icc.proyectofinal.advice.dtos.UpdateAdviceDto;
-
-
 public class Advice {
 
     private Long id;
@@ -18,17 +16,11 @@ public class Advice {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // IDs de referencia para las relaciones
     private Long usuarioId;
     private Long programadorId;
 
     public Advice() {}
 
-    // ==================== FACTORY METHODS ====================
-
-    /**
-     * Crea un Advice (Dominio) desde una AdviceEntity (Persistencia)
-     */
     public static Advice fromEntity(AdviceEntity entity) {
         Advice advice = new Advice();
         advice.setId(entity.getId());
@@ -37,7 +29,7 @@ public class Advice {
         advice.setMensaje(entity.getMensaje());
         advice.setMensajeRespuesta(entity.getMensajeRespuesta());
         advice.setEstado(entity.getEstado());
-        advice.setFecha(entity.getFecha().toString()); // Convertir LocalDateTime a String
+        advice.setFecha(entity.getFecha().toString()); 
         advice.setCreatedAt(entity.getCreatedAt());
         advice.setUpdatedAt(entity.getUpdatedAt());
 
@@ -47,12 +39,8 @@ public class Advice {
         if (entity.getProgramador() != null) {
             advice.setProgramadorId(entity.getProgramador().getId());
         }
-
         return advice;
     }
-    /**
-     * Convierte este modelo a una Entidad para guardar en la BD
-     */
     public AdviceEntity toEntity() {
         AdviceEntity entity = new AdviceEntity();
         if (this.id != null) {
@@ -66,24 +54,14 @@ public class Advice {
         if (this.fecha != null) {
             entity.setFecha(fecha);
         }
-        // El createdAt se maneja en el constructor de la entidad
         return entity;
     }
-    
-    // ==================== UPDATES ====================
-
-    /**
-     * Usado cuando el programador responde a la asesoría (Acepta/Niega)
-     */
     public Advice update(UpdateAdviceDto dto) {
         this.estado = dto.estado;
         this.mensajeRespuesta = dto.mensajeRespuesta;
         this.fecha = dto.fecha;
         return this;
     }
-
-    // ==================== GETTERS & SETTERS ====================
-
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
