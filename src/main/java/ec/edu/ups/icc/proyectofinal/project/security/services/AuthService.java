@@ -19,13 +19,10 @@ import ec.edu.ups.icc.proyectofinal.project.security.repository.RoleRepository;
 import ec.edu.ups.icc.proyectofinal.project.security.utils.JwtUtil;
 import ec.edu.ups.icc.proyectofinal.user.models.UserEntity;
 import ec.edu.ups.icc.proyectofinal.user.repository.UserRepository;
-
 import java.util.Set;
 import java.util.stream.Collectors;
-
 @Service
 public class AuthService {
-
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository; // Inyectado
@@ -43,10 +40,8 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
-    
     @Transactional(readOnly = true)
     public AuthResponseDto login(LoginRequestDto loginRequest) {
-        // Se usa contacto en lugar de email para el login
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getContacto(),
@@ -65,24 +60,20 @@ public class AuthService {
         userDetails.getId(),
         userDetails.getNombre(),
         userDetails.getUsername(),
-        roles, // El Set va aquí
+        roles, 
         userDetails.getMustChangePassword());
     }
-
     @Transactional
-public AuthResponseDto register(RegisterRequestDto registerRequest) {
+    public AuthResponseDto register(RegisterRequestDto registerRequest) {
     if (userRepository.existsByContacto(registerRequest.getContacto())) {
         throw new ConflictException("El contacto ya está registrado");
     }
-
     UserEntity user = new UserEntity();
-    // Si el nombre viene nulo del frontend, usamos la primera parte del correo
     String nombreDefault = (registerRequest.getNombre() != null) ? registerRequest.getNombre() : registerRequest.getContacto().split("@")[0];
     user.setNombre(nombreDefault);
     
     user.setContacto(registerRequest.getContacto());
-    
-    // VALORES POR DEFECTO para campos obligatorios que no están en tu form de Angular
+
     user.setDescripcion("Usuario recién registrado");
     user.setFoto("default-avatar.png");
     user.setEspecialidad("General");
@@ -91,14 +82,12 @@ public AuthResponseDto register(RegisterRequestDto registerRequest) {
     user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
     user.setMustChangePassword(false); 
 
-    // Asignar Rol por defecto (ROLE_USER)
     RoleEntity roleEntity = roleRepository.findByName(RoleName.ROLE_USER)
             .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado."));
     user.getRoles().add(roleEntity);
 
     user = userRepository.save(user);
 
-    // Generar Token para que entre directo tras registrarse
     UserDetailsImpl userDetails = UserDetailsImpl.build(user);
     String jwt = jwtUtil.generateTokenFromUserDetails(userDetails);
     
@@ -116,63 +105,47 @@ public AuthResponseDto register(RegisterRequestDto registerRequest) {
     );
 }
    @Transactional
-public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
-    // 1. Buscar si el usuario existe o crear uno nuevo con valores seguros
+    public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
     UserEntity user = userRepository.findByContacto(googleLoginRequest.getContacto())
             .orElseGet(() -> {
                 UserEntity newUser = new UserEntity();
                 
-                // Datos básicos de Google
                 newUser.setNombre(googleLoginRequest.getNombre());
                 newUser.setContacto(googleLoginRequest.getContacto());
-                
-                // Evitar NullPointerException/Error 500: Llenar campos obligatorios (nullable = false)
-                
-                // Generamos un password aleatorio seguro. El usuario no lo sabrá, 
-                // pero cumple con la restricción de la DB y permite usar BCrypt después.
+
                 newUser.setPassword(passwordEncoder.encode("GOOGLE_AUTH_" + java.util.UUID.randomUUID()));
-                
-                // Descripción obligatoria según tu UserEntity
+
                 newUser.setDescripcion("Usuario registrado automáticamente vía Google");
                 
-                // Manejo de foto obligatoria
                 String urlFoto = googleLoginRequest.getFoto();
                 newUser.setFoto((urlFoto != null && !urlFoto.isEmpty()) ? urlFoto : "default-avatar.png");
                 
-                // Especialidad obligatoria (si aplica) y redes inicializadas
                 newUser.setEspecialidad("General");
                 newUser.setRedes(new java.util.ArrayList<>()); 
 
-                // Lógica Híbrida: Forzar cambio de contraseña para que el usuario 
-                // cree su propia clave y pueda entrar de forma tradicional también.
                 newUser.setMustChangePassword(true);
 
-                // Asignación de Rol obligatoria para que Neon no rechace el registro
                 RoleEntity defaultRole = roleRepository.findByName(RoleName.ROLE_USER)
                         .orElseThrow(() -> new RuntimeException("ERROR CRÍTICO: El rol ROLE_USER no existe en la DB."));
                 newUser.getRoles().add(defaultRole);
                 
-                // Guardar y retornar el nuevo usuario
                 return userRepository.save(newUser);
             });
 
-    // 2. Generación de Seguridad (JWT)
     UserDetailsImpl userDetails = UserDetailsImpl.build(user);
     String jwt = jwtUtil.generateTokenFromUserDetails(userDetails);
 
-    // 3. Mapeo de roles conservando el prefijo ROLE_ para compatibilidad con Angular
     java.util.Set<String> roles = userDetails.getAuthorities().stream()
             .map(auth -> auth.getAuthority()) 
             .collect(java.util.stream.Collectors.toSet());
 
-    // 4. Respuesta al Frontend
     return new AuthResponseDto(
             jwt, 
             user.getId(), 
             user.getNombre(), 
             user.getContacto(), 
             roles,
-            user.isMustChangePassword() // Indica a Angular si debe redirigir a /must-change-password
+            user.isMustChangePassword()
     );
 }
 @Transactional
@@ -186,12 +159,10 @@ public AuthResponseDto googleLogin(GoogleLoginRequestDto googleLoginRequest) {
         UserEntity user = userRepository.findByContacto(contacto)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con contacto: " + contacto));
         
-        // Encriptamos la nueva contraseña antes de guardar
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setMustChangePassword(false); 
         
         userRepository.save(user);
         System.out.println("Contraseña actualizada con éxito en la BD.");
     }
-
 }

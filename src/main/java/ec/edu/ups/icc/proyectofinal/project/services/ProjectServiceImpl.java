@@ -26,7 +26,6 @@ import ec.edu.ups.icc.proyectofinal.user.repository.UserRepository;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
-
     private final ProjectRepository projectRepo;
     private final UserRepository userRepo;
 
@@ -34,24 +33,18 @@ public class ProjectServiceImpl implements ProjectService {
         this.projectRepo = projectRepo;
         this.userRepo = userRepo;
     }
-
    @Override
-@Transactional
-public ProjectResponseDto create(CreateProjectDto dto) {
+    @Transactional
+    public ProjectResponseDto create(CreateProjectDto dto) {
     UserEntity programador = userRepo.findById(dto.assignedToId)
             .orElseThrow(() -> new NotFoundException("El programador con ID " + dto.assignedToId + " no existe"));
 
-    // Nueva forma de validar: Buscamos si el Set contiene el RoleName.ROLE_PROGRAMMER
     boolean esProgramador = programador.getRoles().stream()
             .anyMatch(role -> role.getName().equals(RoleName.ROLE_PROGRAMMER));
 
     if (!esProgramador) {
         throw new BadRequestException("Solo se pueden asignar proyectos a usuarios con el rol 'PROGRAMMER'");
     }
-    
-    // ... resto de tu lógica para guardar el proyecto
-
-
         Project project = ProjectMapper.fromCreateDto(dto);
         ProjectEntity entity = project.toEntity();
         entity.setAssignedTo(programador);
@@ -59,20 +52,17 @@ public ProjectResponseDto create(CreateProjectDto dto) {
         ProjectEntity saved = projectRepo.save(entity);
         return toResponseDto(saved);
     }
-
     @Override
     public Page<ProjectResponseDto> findAll(int page, int size, String[] sort) {
         Pageable pageable = createPageable(page, size, sort);
         return projectRepo.findAll(pageable).map(this::toResponseDto);
     }
-
     @Override
     public ProjectResponseDto findById(Long id) {
         ProjectEntity entity = projectRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Proyecto no encontrado con ID: " + id));
         return toResponseDto(entity);
     }
-
     @Override
     public List<ProjectResponseDto> findByProgramadorId(Long programadorId) {
         if (!userRepo.existsById(programadorId)) {
@@ -82,19 +72,12 @@ public ProjectResponseDto create(CreateProjectDto dto) {
                 .map(this::toResponseDto)
                 .toList();
     }
-
     @Override
-@Transactional
-public ProjectResponseDto update(Long id, UpdateProjectDto dto, UserDetailsImpl currentUser) {
-    // 1. Buscamos la entidad real gestionada por JPA
+    @Transactional
+    public ProjectResponseDto update(Long id, UpdateProjectDto dto, UserDetailsImpl currentUser) {
     ProjectEntity existingEntity = projectRepo.findById(id)
             .orElseThrow(() -> new NotFoundException("Proyecto no encontrado"));
-
-    // 2. Validar que el usuario sea dueño del proyecto o sea ADMIN
     validateOwnership(existingEntity, currentUser);
-
-    // 3. ACTUALIZACIÓN DIRECTA (Evita crear nuevas entidades con toEntity())
-    // Solo actualizamos si el campo en el DTO no es nulo
     if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
         existingEntity.setNombre(dto.getNombre());
     }
@@ -113,36 +96,23 @@ public ProjectResponseDto update(Long id, UpdateProjectDto dto, UserDetailsImpl 
     if (dto.getDeploy() != null) {
         existingEntity.setDeploy(dto.getDeploy());
     }
-
-    // 4. Manejo de Tecnologías (Si tu entidad las tiene como @ElementCollection o @ManyToMany)
     if (dto.getTecnologias() != null) {
         existingEntity.getTecnologias().clear();
         existingEntity.getTecnologias().addAll(dto.getTecnologias());
     }
-
-    // 5. Guardar la entidad original que ya está "enganchada" a la DB
     ProjectEntity saved = projectRepo.save(existingEntity);
-    
     return toResponseDto(saved);
 }
-
     @Override
     @Transactional
     public void delete(Long id, UserDetailsImpl currentUser) {
         ProjectEntity entity = projectRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Proyecto no encontrado"));
-
         validateOwnership(entity, currentUser);
         projectRepo.delete(entity);
     }
-
-    // ================== MÉTODOS PRIVADOS DE APOYO ==================
-
     private ProjectResponseDto toResponseDto(ProjectEntity entity) {
-        // Usamos el mapper base
         ProjectResponseDto dto = ProjectMapper.toResponse(Project.fromEntity(entity));
-        
-        // Llenamos manualmente el UserSummaryDto que pide el ProjectResponseDto
         ProjectResponseDto.UserSummaryDto summary = new ProjectResponseDto.UserSummaryDto();
         summary.id = entity.getAssignedTo().getId();
         summary.nombre = entity.getAssignedTo().getNombre();
@@ -152,7 +122,6 @@ public ProjectResponseDto update(Long id, UpdateProjectDto dto, UserDetailsImpl 
         dto.assignedTo = summary;
         return dto;
     }
-
     private void validateOwnership(ProjectEntity project, UserDetailsImpl currentUser) {
         boolean isAdmin = currentUser.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -161,7 +130,6 @@ public ProjectResponseDto update(Long id, UpdateProjectDto dto, UserDetailsImpl 
             throw new AccessDeniedException("No tienes permiso para modificar este proyecto");
         }
     }
-
     private Pageable createPageable(int page, int size, String[] sort) {
         Sort sortObj = (sort != null && sort.length >= 2) 
             ? Sort.by(Sort.Direction.fromString(sort[1]), sort[0]) 
