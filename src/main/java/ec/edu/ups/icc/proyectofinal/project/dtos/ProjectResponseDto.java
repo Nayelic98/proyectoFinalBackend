@@ -3,8 +3,6 @@ package ec.edu.ups.icc.proyectofinal.project.dtos;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
-
     @JsonPropertyOrder({
     "id",
     "nombre",
@@ -17,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "assignedTo"
 })
 public class ProjectResponseDto {
-
     public Long id;
     public String nombre;
     public String descripcion;
@@ -28,9 +25,7 @@ public class ProjectResponseDto {
     public List<String> tecnologias;
 
     public UserSummaryDto assignedTo;
-
     public ProjectResponseDto() {}
-
     public static class UserSummaryDto {
         public Long id;
         public String nombre;

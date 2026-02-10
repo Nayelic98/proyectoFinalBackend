@@ -7,9 +7,6 @@ import ec.edu.ups.icc.proyectofinal.project.models.Project;
 
 public class ProjectMapper {
 
-    /**
-     * DTO de Creación -> Modelo de Dominio
-     */
     public static Project fromCreateDto(CreateProjectDto dto) {
         Project project = new Project();
         project.setNombre(dto.nombre);
@@ -22,10 +19,6 @@ public class ProjectMapper {
         project.setAssignedToId(dto.assignedToId);
         return project;
     }
-
-    /**
-     * DTO de Actualización -> Modelo de Dominio
-     */
     public static Project fromUpdateDto(UpdateProjectDto dto) {
         Project project = new Project();
         project.setNombre(dto.nombre);
@@ -37,12 +30,6 @@ public class ProjectMapper {
         project.setTecnologias(dto.tecnologias);
         return project;
     }
-
-    /**
-     * Modelo de Dominio -> DTO de Respuesta
-     * Nota: El mapeo del objeto anidado 'assignedTo' se suele completar en el Service
-     * usando el repositorio de usuarios.
-     */
     public static ProjectResponseDto toResponse(Project project) {
         ProjectResponseDto dto = new ProjectResponseDto();
         dto.id = project.getId();
@@ -53,8 +40,6 @@ public class ProjectMapper {
         dto.deploy = project.getDeploy();
         dto.repo = project.getRepo();
         dto.tecnologias = project.getTecnologias();
-        
-        // El objeto assignedTo (UserSummaryDto) se inicializa en el Service
         return dto;
     }
 }

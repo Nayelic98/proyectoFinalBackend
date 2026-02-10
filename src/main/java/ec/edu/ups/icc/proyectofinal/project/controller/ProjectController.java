@@ -20,55 +20,39 @@ import ec.edu.ups.icc.proyectofinal.project.dtos.ProjectResponseDto;
 import ec.edu.ups.icc.proyectofinal.project.dtos.UpdateProjectDto;
 import ec.edu.ups.icc.proyectofinal.project.security.services.UserDetailsImpl;
 import ec.edu.ups.icc.proyectofinal.project.services.ProjectService;
-
 @RestController
 @RequestMapping("/api/proyectos")
 public class ProjectController {
-
     private final ProjectService projectService;
-
     public ProjectController(ProjectService projectService) {
         this.projectService = projectService;
     }
-
     @GetMapping
     public ResponseEntity<List<ProjectResponseDto>> getAll() {
-        // Nota: Si tu service usa Page, cámbialo a .findAll(0, 100, new String[]{"id", "asc"}).getContent()
         return ResponseEntity.ok(projectService.findAll(0, 1000, new String[]{"id", "asc"}).getContent());
     }
-
-    // 📌 PARA: ProyectoService.obtenerProyectos(uidProgramador)
     @GetMapping("/programador/{uid}")
     public ResponseEntity<List<ProjectResponseDto>> getByProgramador(@PathVariable("uid") Long uid) {
         return ResponseEntity.ok(projectService.findByProgramadorId(uid));
     }
-
-    // 📌 PARA: ProyectoService.crearProyecto(proyecto)
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'PROGRAMMER')")
     public ResponseEntity<ProjectResponseDto> create(@RequestBody CreateProjectDto dto) {
         return ResponseEntity.ok(projectService.create(dto));
     }
-   // 📌 ACTUALIZAR con seguridad
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'PROGRAMMER')")
     public ResponseEntity<ProjectResponseDto> update(
             @PathVariable("id") Long id, 
             @RequestBody UpdateProjectDto dto,
-            @AuthenticationPrincipal UserDetailsImpl currentUser) { // <--- Captura el usuario
-        
-        // Ahora pasamos los 3 argumentos que el Service exige
+            @AuthenticationPrincipal UserDetailsImpl currentUser) { 
         return ResponseEntity.ok(projectService.update(id, dto, currentUser));
     }
-
-    // 📌 ELIMINAR con seguridad
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'PROGRAMMER')")
     public ResponseEntity<Void> delete(
             @PathVariable("id") Long id,
-            @AuthenticationPrincipal UserDetailsImpl currentUser) { // <--- Captura el usuario
-            
-        // Ahora pasamos los 2 argumentos que el Service exige
+            @AuthenticationPrincipal UserDetailsImpl currentUser) { 
         projectService.delete(id, currentUser);
         return ResponseEntity.noContent().build();
     }
