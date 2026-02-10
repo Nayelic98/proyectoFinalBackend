@@ -31,7 +31,6 @@ public class GlobalExceptionHandler {
                                 .status(ex.getStatus())
                                 .body(response);
         }
-
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ErrorResponse> handleValidationException(
                         MethodArgumentNotValidException ex,
@@ -52,7 +51,6 @@ public class GlobalExceptionHandler {
                                 .badRequest()
                                 .body(response);
         }
-
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleUnexpectedException(
                         Exception ex,
@@ -61,12 +59,10 @@ public class GlobalExceptionHandler {
                                 HttpStatus.INTERNAL_SERVER_ERROR,
                                 "Error interno del servidor",
                                 request.getRequestURI());
-
                 return ResponseEntity
                                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body(response);
         }
-
         @ExceptionHandler(AuthorizationDeniedException.class)
         public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(
                         AuthorizationDeniedException ex,
@@ -75,12 +71,10 @@ public class GlobalExceptionHandler {
                                 HttpStatus.FORBIDDEN,
                                 "No tienes permisos para acceder a este recurso",
                                 request.getRequestURI());
-
                 return ResponseEntity
                                 .status(HttpStatus.FORBIDDEN)
                                 .body(response);
         }
-
         @ExceptionHandler(AccessDeniedException.class)
         public ResponseEntity<ErrorResponse> handleAccessDeniedException(
                         AccessDeniedException ex,
@@ -89,12 +83,10 @@ public class GlobalExceptionHandler {
                                 HttpStatus.FORBIDDEN,
                                 "Acceso denegado. No tienes los permisos necesarios",
                                 request.getRequestURI());
-
                 return ResponseEntity
                                 .status(HttpStatus.FORBIDDEN)
                                 .body(response);
         }
-
         @ExceptionHandler(AuthenticationException.class)
         public ResponseEntity<ErrorResponse> handleAuthenticationException(
                         AuthenticationException ex,
@@ -103,10 +95,8 @@ public class GlobalExceptionHandler {
                                 HttpStatus.UNAUTHORIZED,
                                 "Credenciales inválidas o sesión expirada",
                                 request.getRequestURI());
-
                 return ResponseEntity
                                 .status(HttpStatus.UNAUTHORIZED)
                                 .body(response);
         }
-
 }

@@ -2,14 +2,11 @@ package ec.edu.ups.icc.proyectofinal.exceptions.response;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ErrorResponse implements Serializable {
 
+public class ErrorResponse implements Serializable {
     private LocalDateTime timestamp;
     private int status;
     private String error;
@@ -30,34 +27,25 @@ public class ErrorResponse implements Serializable {
         this.path = path;
         this.details = details;
     }
-
     public ErrorResponse(HttpStatus status, String message, String path) {
         this(status, message, path, null);
     }
-
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
-
     public int getStatus() {
         return status;
     }
-
     public String getError() {
         return error;
     }
-
     public String getMessage() {
         return message;
     }
-
     public String getPath() {
         return path;
     }
-
     public Map<String, String> getDetails() {
         return details;
     }
-
-    
 }

@@ -1,7 +1,6 @@
 package ec.edu.ups.icc.proyectofinal.core.entities;
+import jakarta.persistence.*;@MappedSuperclass
 
-import jakarta.persistence.*;
-@MappedSuperclass
 public abstract class BaseModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
