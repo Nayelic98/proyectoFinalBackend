@@ -131,4 +131,3 @@ app:
 **URL VIDEO:**
 [https://1drv.ms/v/c/c53fc92d9f78cd25/IQDB8LYGSs6GTaFjfbKAFQBhAeVaYOY5H_Up9q6ZoeabSBk?e=lhYVn4](https://1drv.ms/v/c/c53fc92d9f78cd25/IQDB8LYGSs6GTaFjfbKAFQBhAeVaYOY5H_Up9q6ZoeabSBk?e=lhYVn4)
 
-¿Deseas que genere ahora un archivo de colección para Postman con todos estos endpoints configurados?
