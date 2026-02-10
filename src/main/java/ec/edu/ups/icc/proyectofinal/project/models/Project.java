@@ -1,11 +1,8 @@
 package ec.edu.ups.icc.proyectofinal.project.models;
 
 import java.util.List;
-
 import ec.edu.ups.icc.proyectofinal.project.dtos.UpdateProjectDto;
-
 public class Project {
-
     private Long id;
     private String nombre;
     private String descripcion;
@@ -17,8 +14,6 @@ public class Project {
     private Long assignedToId;
 
     public Project() {}
-
-   
     public static Project fromEntity(ProjectEntity entity) {
         Project project = new Project();
         project.setId(entity.getId());
@@ -32,14 +27,9 @@ public class Project {
         
         if (entity.getAssignedTo() != null) {
             project.setAssignedToId(entity.getAssignedTo().getId());
-        }
-        
+        }  
         return project;
     }
-
-    /**
-     * Convierte este Project a una ProjectEntity para persistencia
-     */
     public ProjectEntity toEntity() {
         ProjectEntity entity = new ProjectEntity();
         if (this.id != null) {
@@ -52,11 +42,8 @@ public class Project {
         entity.setDeploy(this.deploy);
         entity.setRepo(this.repo);
         entity.setTecnologias(this.tecnologias);
-        // Nota: El assignedTo se suele setear en el Service buscando el UserEntity por ID
         return entity;
     }
-
-
     public Project update(UpdateProjectDto dto) {
         this.nombre = dto.nombre;
         this.descripcion = dto.descripcion;
@@ -67,8 +54,6 @@ public class Project {
         this.tecnologias = dto.tecnologias;
         return this;
     }
-
-   
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
